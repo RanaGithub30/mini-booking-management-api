@@ -16,4 +16,12 @@ class UserManageController extends Controller
     public function register(Request $request){
         return $this->userService->register($request->all());
     }
+
+    public function login(Request $request){
+        return $this->userService->login($request->all());
+    }
+
+    public function getUserDetails(){
+        return $this->userService->getUserDetails();
+    }
 }
