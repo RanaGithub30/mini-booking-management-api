@@ -2,24 +2,26 @@
 
 namespace App\Services;
 
-use App\Traits\UserTraits;
+use App\Traits\{UserTraits, GateAllowTrait, CommonTraits};
 use App\Models\User;
 use App\Events\RegisterEmailSendEvent;
 use Illuminate\Support\Facades\Auth;
+use App\Enums\StatusEnums;
 
 class UserService{
-    use UserTraits;
+    use UserTraits, GateAllowTrait, CommonTraits;
 
     public function register($data){
         $userExists = $this->checkUserExists($data['email']);
 
         if($userExists){
-            return response()
-            ->json(
-                [
-                    'message' => 'User already exists'
-                ], 
-                400);
+            return $this->formatResponse(
+                StatusEnums::ERROR, 
+                StatusEnums::VALIDATION_FAILED, 
+                null, 
+                ['message' => StatusEnums::USER_EXISTS->value], 
+                400
+            );
         }
 
         $formatUserData = $this->formatUserData($data);
@@ -28,12 +30,10 @@ class UserService{
         /** Sending Email Using Event Listner */
         event(new RegisterEmailSendEvent($data['email']));
 
-        return response()->json(
-            [
-                'message' => 'User created successfully',
-                'data' => $createUser
-            ],  
-            200
+        return $this->formatResponse(
+            StatusEnums::SUCCESS, 
+            StatusEnums::USER_REGISTERED, 
+            $createUser
         );
     }
 
@@ -44,25 +44,26 @@ class UserService{
         $userExists = $this->checkUserExists($data['email']);
 
         if(!$userExists){
-            return response()
-            ->json(
-                [
-                    'message' => 'User does not exists'
-                ], 
-            400);
+            return $this->formatResponse(
+                StatusEnums::ERROR, 
+                StatusEnums::VALIDATION_FAILED, 
+                null, 
+                ['message' => StatusEnums::USER_NOT_FOUND->value], 
+                400
+            );
         }
 
         if(Auth::attempt(['email' => $email, 'password' => $password])){
             $user = Auth::user();
             $token = $user->createToken('auth_token')->plainTextToken;
 
-            return response()->json(
+            return $this->formatResponse(
+                StatusEnums::SUCCESS, 
+                StatusEnums::USER_LOGGED_IN, 
                 [
-                    'message' => 'User logged in successfully',
-                    'access_token' => $token,
-                    'token_type' => 'Bearer'
-                ],
-                200
+                    'user' => $user,
+                    'token' => $token
+                ]
             );
         }
     }
@@ -70,12 +71,30 @@ class UserService{
     public function getUserDetails(){
         $user = Auth::user();
 
-        return response()->json(
-            [
-                'message' => 'User details fetched successfully',
-                'data' => $user
-            ],
-            200
+        return $this->formatResponse(
+            StatusEnums::SUCCESS, 
+            StatusEnums::USER_DETAILS_FETCHED, 
+            $user
+        );
+    }
+
+    public function updateUserDetails($data){
+        $user = Auth::user();
+
+        $formatUserData = $data;
+        $password = $data['password'] ?? null;
+
+        if($password){
+            $data['password'] = bcrypt($password);
+            $formatUserData = $this->formatUserData($data);
+        }
+        
+        $user->update($formatUserData);
+
+        return $this->formatResponse(
+            StatusEnums::SUCCESS, 
+            StatusEnums::USER_DETAILS_UPDATED, 
+            $user
         );
     }
 }

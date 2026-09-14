@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Services\UserService;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegistrationRequest;
+use App\Http\Requests\UserUpdateRequest;
 
 class UserManageController extends Controller
 {
@@ -25,5 +26,9 @@ class UserManageController extends Controller
 
     public function getUserDetails(){
         return $this->userService->getUserDetails();
+    }
+
+    public function updateUserDetails(UserUpdateRequest $request){
+        return $this->userService->updateUserDetails($request->all());
     }
 }

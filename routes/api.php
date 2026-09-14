@@ -13,6 +13,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::controller(UserManageController::class)->group(function () {
         Route::get('/user', 'getUserDetails');
+        Route::post('/user/update', 'updateUserDetails');
     });
 
 });
