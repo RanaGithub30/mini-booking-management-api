@@ -6,7 +6,7 @@ use App\Traits\{UserTraits, GateAllowTrait, CommonTraits};
 use App\Models\User;
 use App\Events\RegisterEmailSendEvent;
 use Illuminate\Support\Facades\Auth;
-use App\Enums\StatusEnums;
+use App\Enums\{StatusEnums, StatusCodeEnums};
 
 class UserService{
     use UserTraits, GateAllowTrait, CommonTraits;
@@ -20,7 +20,7 @@ class UserService{
                 StatusEnums::VALIDATION_FAILED, 
                 null, 
                 ['message' => StatusEnums::USER_EXISTS->value], 
-                400
+                StatusCodeEnums::ERROR->value
             );
         }
 
@@ -33,7 +33,9 @@ class UserService{
         return $this->formatResponse(
             StatusEnums::SUCCESS, 
             StatusEnums::USER_REGISTERED, 
-            $createUser
+            $createUser,
+            null,
+            StatusCodeEnums::USER_REGISTERED->value
         );
     }
 
@@ -49,7 +51,7 @@ class UserService{
                 StatusEnums::VALIDATION_FAILED, 
                 null, 
                 ['message' => StatusEnums::USER_NOT_FOUND->value], 
-                400
+                StatusCodeEnums::UNAUTHORIZED->value
             );
         }
 
